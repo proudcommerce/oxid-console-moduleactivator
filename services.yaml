@@ -5,4 +5,4 @@ services:
   ProudCommerce\OxidConsoleModuleactivator\Command\Moduleactivator:
     class: ProudCommerce\OxidConsoleModuleactivator\Command\ModuleactivatorCommand
     tags:
-      - { name: 'console.command', command: 'pc:module:activator', description: 'Activates multiple modules via YAML configuration file' }
+      - { name: 'console.command', command: 'pc:module:activator', description: 'Activates multiple modules via YAML configuration file.' }
