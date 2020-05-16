@@ -1,7 +1,7 @@
 {
   "name": "proudcommerce/oxid-console-moduleactivator",
-  "description": "",
-  "homepage": "https://www.oxid-esales.com",
+  "description": "Activates multiple modules, based on a YAML file.",
+  "homepage": "https://github.com/proudcommerce/oxid-console-moduleactivator",
   "license": [
     "GPL-3.0-only"
   ],
