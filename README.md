@@ -1,4 +1,8 @@
-# oxid-console-moduleactivator
+# OXID console moduleactivator
+
+## Installation
+
+`composer require proudcommerce/oxid-console-moduleactivator`
 
 ## Commands
 
