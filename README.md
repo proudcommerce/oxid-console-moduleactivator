@@ -5,7 +5,7 @@
 pc:module:activator
 --------------------
 
-* Description: Activates multiple modules, based on a YAML file
+* Description: Activates multiple modules, based on a YAML file.
 * Usage:
 
   * `oe-console pc:module:activator [-s|--skipDeactivation] [-d|--clearModuleData] [--] <yaml-file>`
