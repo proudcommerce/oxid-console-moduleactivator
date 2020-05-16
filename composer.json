@@ -1,0 +1,17 @@
+{
+  "name": "proudcommerce/oxid-console-moduleactivator",
+  "description": "",
+  "homepage": "https://www.oxid-esales.com",
+  "license": [
+    "GPL-3.0-only"
+  ],
+  "type": "oxideshop-component",
+  "require": {
+    "php": ">=7.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "ProudCommerce\\OxidConsoleModuleactivator\\": "./src"
+    }
+  }
+}

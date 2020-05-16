@@ -1,0 +1,5 @@
+services:
+  ProudCommerce\OxidConsoleModuleactivator\Command\Moduleactivator:
+    class: ProudCommerce\OxidConsoleModuleactivator\Command\ModuleactivatorCommand
+    tags:
+      - { name: 'console.command', command: 'pc:module:activator', description: '' }
