@@ -373,9 +373,8 @@ HELP;
         ];
         $queryBuilder = $this->queryBuilderFactory->create();
         $queryBuilder
-        ->delete()
-        ->from('oxconfig')
-        ->where("oxvarname IN(:varNames)")
-        ->setParameter('varNames', array_values($aVarnames));
+        ->delete('oxconfig')
+        ->where("oxvarname IN('" . implode("','", array_values($aVarnames)) . "')")
+        ->execute();
     }
 }
