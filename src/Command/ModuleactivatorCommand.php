@@ -7,6 +7,7 @@ use OxidEsales\EshopCommunity\Internal\Framework\Module\Configuration\Dao\ShopCo
 use OxidEsales\EshopCommunity\Internal\Framework\Module\Setup\Service\ModuleActivationServiceInterface;
 use OxidEsales\EshopCommunity\Internal\Framework\Module\State\ModuleStateServiceInterface;
 use OxidEsales\EshopCommunity\Internal\Transition\Utility\ContextInterface;
+use OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -47,18 +48,24 @@ class ModuleactivatorCommand extends Command
      * @var ModuleStateServiceInterface
      */
     private $stateService;
+    /**
+     * @var QueryBuilderFactoryInterface
+     */
+    private $queryBuilderFactory;
 
     /**
      * @param ShopConfigurationDaoInterface    $shopConfigurationDao
      * @param ContextInterface                 $context
      * @param ModuleActivationServiceInterface $moduleActivationService
      * @param ModuleStateServiceInterface      $stateService
+     * @param QueryBuilderFactoryInterface     $queryBuilderFactory
      */
     public function __construct(
         ShopConfigurationDaoInterface $shopConfigurationDao,
         ContextInterface $context,
         ModuleActivationServiceInterface $moduleActivationService,
-        ModuleStateServiceInterface $stateService
+        ModuleStateServiceInterface $stateService,
+        QueryBuilderFactoryInterface $queryBuilderFactory
     ) {
         parent::__construct(null);
 
@@ -66,8 +73,14 @@ class ModuleactivatorCommand extends Command
         $this->context = $context;
         $this->moduleActivationService = $moduleActivationService;
         $this->stateService = $stateService;
+        $this->queryBuilderFactory = $queryBuilderFactory;
     }
 
+    /**
+     * Command configuration
+     *
+     * @return void
+     */
     protected function configure()
     {
         $this->setName('pc:module:activator')
@@ -133,6 +146,10 @@ HELP;
         $app = $this->getApplication();
         $skipDeactivation = $input->getOption('skipDeactivation');
 
+        $shopConfiguration = $this->shopConfigurationDao->get(
+            $this->context->getCurrentShopId()
+        );
+
         // now try to read YAML
         $moduleYml = $this->getYaml($input->getArgument('yaml'));
         $moduleValues = Yaml::parse($moduleYml);
@@ -178,11 +195,7 @@ HELP;
             } elseif (isset($moduleValues['blacklist'])) {
                 // use blacklist
                 $this->aYamlShopIds = array_keys($moduleValues['blacklist']);
-
-                /* @var \OxidEsales\Eshop\Core\Module\ModuleList $oxModuleList  */
-                $oxModuleList = oxNew(\OxidEsales\Eshop\Core\Module\ModuleList::class);
-                $oConfig = \OxidEsales\Eshop\Core\Registry::getConfig();
-                $aModules = $oxModuleList->getModulesFromDir($oConfig->getModulesDir());
+                $aModules = $shopConfiguration->getModuleConfigurations();
 
                 if (count($this->aPriorities)) {
                     $output->writeLn("<comment>Orig module order:</comment>" . print_r(array_keys($aModules), true));
@@ -190,7 +203,8 @@ HELP;
                     $output->writeLn("<comment>Sorted module order:</comment>" . print_r(array_keys($aModules), true));
                 }
 
-                foreach ($aModules as $moduleId => $aModuleData) {
+                foreach ($aModules as $moduleConfiguration) {
+                    $moduleId = $moduleConfiguration->getId();
                     foreach ($moduleValues['blacklist'] as $shopId => $moduleIds) {
                         if ($activateShopId && $activateShopId != $shopId) {
                             $output->writeLn("<comment>Skipping shop '$shopId'!</comment>");
@@ -238,7 +252,7 @@ HELP;
      *
      * @return string
      */
-    public function getYaml($ymlString, $basePath = '')
+    private function getYaml($ymlString, $basePath = '')
     {
         // is it a file?
         if (strpos(strtolower($ymlString), '.yml') !== false
@@ -322,7 +336,7 @@ HELP;
      * @param OutputInterface $output An OutputInterface instance
      * @return array
      */
-    protected function getPriorities($moduleValues, $input, $output)
+    private function getPriorities($moduleValues, $input, $output)
     {
         $aPriorities = [];
         $activateShopId = $this->context->getCurrentShopId();
@@ -349,18 +363,19 @@ HELP;
      */
     private function clearModuleData($shopId = false)
     {
-        $sSql = "delete from oxconfig where oxvarname in (
+        $aVarnames = [
             'aDisabledModules',
             'aLegacyModules',
             'aModuleFiles',
             'aModulePaths',
             'aModules',
             'aModuleTemplates'
-        )";
-        if ($shopId) {
-            $sSql .= " and oxshopid = '{$shopId}'";
-        }
-        $database = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
-        $database->execute($sSql);
+        ];
+        $queryBuilder = $this->queryBuilderFactory->create();
+        $queryBuilder
+        ->delete()
+        ->from('oxconfig')
+        ->where("oxvarname IN(:varNames)")
+        ->setParameter('varNames', array_values($aVarnames));
     }
 }
