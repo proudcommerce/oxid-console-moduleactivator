@@ -10,16 +10,14 @@ pc:module:activator
 --------------------
 
 * Description: Activates multiple modules, based on a YAML file.
+
 * Usage:
+`vendor/bin/oe-console oe-console pc:module:activator [-s|--skipDeactivation] [-d|--clearModuleData] [--] <yaml-file>`
 
-  * `oe-console pc:module:activator [-s|--skipDeactivation] [-d|--clearModuleData] [--] <yaml-file>`
+* Example (activate all modules defined in the YAML file basedon a white- or blacklist):
+`vendor/bin/oe-console oe-console pc:module:activator -s ../modules.yml`
 
-usage:
-oe-console pc:module:activator ../modules.yml
-- to activate all modules defined in the YAML file based
-on a white- or blacklist
-
-### Example
+### YML file
 
 ```yaml
 whitelist:
