@@ -8,12 +8,15 @@ use OxidEsales\EshopCommunity\Internal\Framework\Module\Setup\Service\ModuleActi
 use OxidEsales\EshopCommunity\Internal\Framework\Module\State\ModuleStateServiceInterface;
 use OxidEsales\EshopCommunity\Internal\Transition\Utility\ContextInterface;
 use OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
+use OxidEsales\EshopCommunity\Internal\Framework\Module\Install\Service\ModuleConfigurationInstallerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Yaml\Yaml;
+use Symfony\Component\Console\Input\ArrayInput;
+use Webmozart\PathUtil\Path;
 
 class ModuleactivatorCommand extends Command
 {
@@ -52,6 +55,10 @@ class ModuleactivatorCommand extends Command
      * @var QueryBuilderFactoryInterface
      */
     private $queryBuilderFactory;
+    /**
+     * @var ModuleConfigurationInstallerInterface
+     */
+    private $moduleConfigurationInstaller;
 
     /**
      * @param ShopConfigurationDaoInterface    $shopConfigurationDao
@@ -59,13 +66,15 @@ class ModuleactivatorCommand extends Command
      * @param ModuleActivationServiceInterface $moduleActivationService
      * @param ModuleStateServiceInterface      $stateService
      * @param QueryBuilderFactoryInterface     $queryBuilderFactory
+     * @param ModuleConfigurationInstallerInterface $moduleConfigurationInstaller
      */
     public function __construct(
         ShopConfigurationDaoInterface $shopConfigurationDao,
         ContextInterface $context,
         ModuleActivationServiceInterface $moduleActivationService,
         ModuleStateServiceInterface $stateService,
-        QueryBuilderFactoryInterface $queryBuilderFactory
+        QueryBuilderFactoryInterface $queryBuilderFactory,
+        ModuleConfigurationInstallerInterface $moduleConfigurationInstaller
     ) {
         parent::__construct(null);
 
@@ -74,6 +83,7 @@ class ModuleactivatorCommand extends Command
         $this->moduleActivationService = $moduleActivationService;
         $this->stateService = $stateService;
         $this->queryBuilderFactory = $queryBuilderFactory;
+        $this->moduleConfigurationInstaller = $moduleConfigurationInstaller;
     }
 
     /**
@@ -141,11 +151,7 @@ HELP;
             $output->writeLn("<comment>Clearing module data in DB!</comment>");
             $this->clearModuleData($activateShopId);
         }
-
-        /* @var Symfony\Component\Console\Application $app */
-        $app = $this->getApplication();
         $skipDeactivation = $input->getOption('skipDeactivation');
-
         $shopConfiguration = $this->shopConfigurationDao->get(
             $this->context->getCurrentShopId()
         );
@@ -154,6 +160,8 @@ HELP;
         $moduleYml = $this->getYaml($input->getArgument('yaml'));
         $moduleValues = Yaml::parse($moduleYml);
         if ($moduleValues && is_array($moduleValues)) {
+            // check if we also have to install modules first
+            $this->installModules($moduleValues, $input, $output);
             $this->aPriorities = $this->getPriorities($moduleValues, $input, $output);
             // use whitelist
             if (isset($moduleValues['whitelist'])) {
@@ -353,6 +361,65 @@ HELP;
             $output->writeLn(print_r($aPriorities, true));
         }
         return $aPriorities;
+    }
+
+    /**
+     * Get module installations, if any, and install them
+     * @param array $moduleValues Yaml entries as array
+     * @param InputInterface  $input  An InputInterface instance
+     * @param OutputInterface $output An OutputInterface instance
+     * @return array
+     */
+    private function installModules($moduleValues, $input, $output)
+    {
+        /* @var Symfony\Component\Console\Application $app */
+        $app = $this->getApplication();
+        if (isset($moduleValues['installations'])) {
+            foreach ($moduleValues['installations'] as $moduleDir) {
+                $sourceDir = $moduleDir;
+                // target dir is optional, may be specified after ':' separator,
+                $targetDir = '';
+                if (strpos($moduleDir, ':') !== false) {
+                    $sourceTarget = explode(':', $moduleDir);
+                    $sourceDir = $sourceTarget[0];
+                    $targetDir = $sourceTarget[1];
+                }
+                $output->writeLn("<comment>Checking if module {$sourceDir} is installed ...</comment>");
+                $fullPath = $this->getAbsolutePath($sourceDir);
+                $fullTargetPath = $this->getAbsolutePath($targetDir);
+                if (!$this->moduleConfigurationInstaller->isInstalled($fullPath)) {
+                    // module configuration installer doesn't create folders
+                    if (!file_exists($fullTargetPath)) {
+                        try {
+                            mkdir($fullTargetPath, 0775, true);
+                        } catch (\Exception $ex) {
+                            $output->writeLn("<error>Unable to create folder {$fullTargetPath}!</error>");
+                        }
+                    }
+                    $arguments = array(
+                        'command' => 'oe:module:install-configuration',
+                        'module-source-path'    => $sourceDir,
+                        'module-target-path'    => $targetDir
+                    );
+                    $activateInput = new ArrayInput($arguments);
+                    $output->writeLn("<comment>Installing module {$sourceDir} ...</comment>");
+                    $app->find('oe:module:install-configuration')->run($activateInput, $output);
+                } else {
+                    $output->writeLn("<comment>Module {$sourceDir} is already installed!</comment>");
+                }
+            }
+        }
+    }
+
+    /**
+     * @param string $path
+     * @return string
+     */
+    private function getAbsolutePath(string $path): string
+    {
+        return Path::isRelative($path)
+            ? Path::makeAbsolute($path, getcwd())
+            : $path;
     }
 
     /**
