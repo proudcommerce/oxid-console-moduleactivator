@@ -13,11 +13,11 @@ pc:module:activator
 
 * Usage:
 
-`vendor/bin/oe-console oe-console pc:module:activator [-s|--skipDeactivation] [-d|--clearModuleData] [--] <yaml-file>`
+`vendor/bin/oe-console pc:module:activator [-s|--skipDeactivation] [-d|--clearModuleData] [--] <yaml-file>`
 
 * Example (activate all modules defined in the YAML file basedon a white- or blacklist):
 
-`vendor/bin/oe-console oe-console pc:module:activator -s ../modules.yml`
+`vendor/bin/oe-console pc:module:activator -s ../modules.yml`
 
 ### YML file
 
