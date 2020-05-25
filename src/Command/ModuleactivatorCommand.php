@@ -148,7 +148,7 @@ HELP;
         $activateShopId = $this->context->getCurrentShopId();
         $clearModuleData = $input->getOption('clearModuleData');
         if ($clearModuleData) {
-            $output->writeLn("<comment>Clearing module data in DB!</comment>");
+            $output->writeLn("<info>Clearing module data in DB!</info>");
             $this->clearModuleData($activateShopId);
         }
         $skipDeactivation = $input->getOption('skipDeactivation');
@@ -187,14 +187,14 @@ HELP;
                         if (!$skipDeactivation) {
                             if ($this->stateService->isActive($moduleId, $shopId) === true) {
                                 $this->moduleActivationService->deactivate($moduleId, $shopId);
-                                $output->writeLn("<comment>Module '$moduleId' deactived</comment>");
+                                $output->writeLn("<info>Module '$moduleId' deactivated</info>");
                             } else {
                                 $output->writeLn("<comment>Module '$moduleId' not active</comment>");
                             }
                         }
                         if ($this->stateService->isActive($moduleId, $shopId) === false) {
                             $this->moduleActivationService->activate($moduleId, $shopId);
-                            $output->writeLn("<comment>Module '$moduleId' actived</comment>");
+                            $output->writeLn("<info>Module '$moduleId' activated</info>");
                         } else {
                             $output->writeLn("<comment>Module '$moduleId' already active</comment>");
                         }
@@ -231,14 +231,14 @@ HELP;
                         if (!$skipDeactivation) {
                             if ($this->stateService->isActive($moduleId, $shopId) === true) {
                                 $this->moduleActivationService->deactivate($moduleId, $shopId);
-                                $output->writeLn("<comment>Module '$moduleId' deactived</comment>");
+                                $output->writeLn("<info>Module '$moduleId' deactivated</info>");
                             } else {
                                 $output->writeLn("<comment>Module '$moduleId' not active</comment>");
                             }
                         }
                         if ($this->stateService->isActive($moduleId, $shopId) === false) {
                             $this->moduleActivationService->activate($moduleId, $shopId);
-                            $output->writeLn("<comment>Module '$moduleId' actived</comment>");
+                            $output->writeLn("<info>Module '$moduleId' activated</info>");
                         } else {
                             $output->writeLn("<comment>Module '$moduleId' already active</comment>");
                         }
@@ -248,7 +248,7 @@ HELP;
                 $output->writeLn("<comment>No modules to activate for subshop '$shopId'!</comment>");
             }
         } else {
-            $output->writeLn("<comment>No valid YAML data found!</comment>");
+            $output->writeLn("<error>No valid YAML data found!</error>");
         }
     }
 
