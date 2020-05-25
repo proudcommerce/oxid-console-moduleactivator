@@ -99,5 +99,5 @@ A __better alternative__ might be to use the ["wikimedia/composer-merge-plugin"]
 * Shortcut: `-d`
 * Accept value: no
 * Is value required: no
-* Description: Clear module data in oxconfig.
+* Description: Clear module data in oxconfig table.
 * Default: `false`
