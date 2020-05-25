@@ -20,6 +20,7 @@ use Webmozart\PathUtil\Path;
 
 class ModuleactivatorCommand extends Command
 {
+
     /**
      * Module activation priorities
      *
@@ -61,11 +62,11 @@ class ModuleactivatorCommand extends Command
     private $moduleConfigurationInstaller;
 
     /**
-     * @param ShopConfigurationDaoInterface    $shopConfigurationDao
-     * @param ContextInterface                 $context
-     * @param ModuleActivationServiceInterface $moduleActivationService
-     * @param ModuleStateServiceInterface      $stateService
-     * @param QueryBuilderFactoryInterface     $queryBuilderFactory
+     * @param ShopConfigurationDaoInterface         $shopConfigurationDao
+     * @param ContextInterface                      $context
+     * @param ModuleActivationServiceInterface      $moduleActivationService
+     * @param ModuleStateServiceInterface           $stateService
+     * @param QueryBuilderFactoryInterface          $queryBuilderFactory
      * @param ModuleConfigurationInstallerInterface $moduleConfigurationInstaller
      */
     public function __construct(
@@ -75,7 +76,8 @@ class ModuleactivatorCommand extends Command
         ModuleStateServiceInterface $stateService,
         QueryBuilderFactoryInterface $queryBuilderFactory,
         ModuleConfigurationInstallerInterface $moduleConfigurationInstaller
-    ) {
+    )
+    {
         parent::__construct(null);
 
         $this->shopConfigurationDao = $shopConfigurationDao;
@@ -94,10 +96,10 @@ class ModuleactivatorCommand extends Command
     protected function configure()
     {
         $this->setName('pc:module:activator')
-        ->setDescription('Activates multiple modules, based on a YAML file')
-        ->addOption('skipDeactivation', 's', InputOption::VALUE_NONE, "Skip deactivation of modules, only activate.")
-        ->addOption('clearModuleData', 'd', InputOption::VALUE_NONE, "Clear module data in oxconfig.")
-        ->addArgument('yaml', InputArgument::REQUIRED, 'YAML module list filename or YAML string. The file path is relative to the shop installation_root_path');
+            ->setDescription('Activates multiple modules, based on a YAML file')
+            ->addOption('skipDeactivation', 's', InputOption::VALUE_NONE, "Skip deactivation of modules, only activate.")
+            ->addOption('clearModuleData', 'd', InputOption::VALUE_NONE, "Clear module data in oxconfig.")
+            ->addArgument('yaml', InputArgument::REQUIRED, 'YAML module list filename or YAML string. The file path is relative to the shop installation_root_path');
 
         $help = <<<HELP
 <info>usage:</info>
@@ -174,7 +176,7 @@ HELP;
 
                     if (count($this->aPriorities)) {
                         $output->writeLn("<comment>Orig module order:</comment>" . print_r($moduleIds, true));
-                        uasort($moduleIds, array($this, "sortModules"));
+                        uasort($moduleIds, [$this, "sortModules"]);
                         $output->writeLn("<comment>Sorted module order:</comment>" . print_r($moduleIds, true));
                     }
 
@@ -207,7 +209,7 @@ HELP;
 
                 if (count($this->aPriorities)) {
                     $output->writeLn("<comment>Orig module order:</comment>" . print_r(array_keys($aModules), true));
-                    uasort($aModules, array($this, "sortModules"));
+                    uasort($aModules, [$this, "sortModules"]);
                     $output->writeLn("<comment>Sorted module order:</comment>" . print_r(array_keys($aModules), true));
                 }
 
@@ -218,7 +220,7 @@ HELP;
                             $output->writeLn("<comment>Skipping shop '$shopId'!</comment>");
                             continue;
                         }
-                        
+
                         if (in_array($moduleId, $moduleIds)) {
                             $output->writeLn("<comment>Module blacklisted: '$moduleId' - skipping!</comment>");
                             continue 2;
@@ -274,7 +276,7 @@ HELP;
                 $ymlString = file_get_contents($ymlFile);
             }
         }
-        
+
         return $ymlString;
     }
 
@@ -287,8 +289,10 @@ HELP;
     {
         return Registry::getConfig()->getConfigParam('sShopDir') . DIRECTORY_SEPARATOR;
     }
+
     /**
      * @param string $moduleId
+     *
      * @return bool
      */
     private function isInstalled(string $moduleId): bool
@@ -296,7 +300,7 @@ HELP;
         $shopConfiguration = $this->shopConfigurationDao->get(
             $this->context->getCurrentShopId()
         );
-        
+
         return $shopConfiguration->hasModuleConfiguration($moduleId);
     }
 
@@ -305,6 +309,7 @@ HELP;
      *
      * @param Module $a
      * @param Module $b
+     *
      * @return int
      */
     public function sortModules($a, $b)
@@ -321,12 +326,12 @@ HELP;
         }
         foreach ($this->aYamlShopIds as $shopId) {
             // check if subshop priorities defined
-            if (isset($this->aPriorities[$shopId])) {
-                if (isset($this->aPriorities[$shopId][$aID])) {
-                    $aP = $this->aPriorities[$shopId][$aID];
+            if (isset($this->aPriorities[ $shopId ])) {
+                if (isset($this->aPriorities[ $shopId ][ $aID ])) {
+                    $aP = $this->aPriorities[ $shopId ][ $aID ];
                 }
-                if (isset($this->aPriorities[$shopId][$bID])) {
-                    $bP = $this->aPriorities[$shopId][$bID];
+                if (isset($this->aPriorities[ $shopId ][ $bID ])) {
+                    $bP = $this->aPriorities[ $shopId ][ $bID ];
                 }
             }
         }
@@ -334,14 +339,17 @@ HELP;
         if ($aP == $bP) {
             return 0;
         }
+
         return ($aP > $bP) ? -1 : 1;
     }
 
     /**
      * Get module priorities, if any
-     * @param array $moduleValues Yaml entries as array
-     * @param InputInterface  $input  An InputInterface instance
-     * @param OutputInterface $output An OutputInterface instance
+     *
+     * @param array           $moduleValues Yaml entries as array
+     * @param InputInterface  $input        An InputInterface instance
+     * @param OutputInterface $output       An OutputInterface instance
+     *
      * @return array
      */
     private function getPriorities($moduleValues, $input, $output)
@@ -353,21 +361,24 @@ HELP;
                 if ($activateShopId && $activateShopId != $shopId) {
                     continue;
                 }
-                $aPriorities[$shopId] = $modulePrios;
+                $aPriorities[ $shopId ] = $modulePrios;
             }
         }
         if (count($aPriorities)) {
             $output->writeLn("<comment>Module Priorities:</comment>");
             $output->writeLn(print_r($aPriorities, true));
         }
+
         return $aPriorities;
     }
 
     /**
      * Get module installations, if any, and install them
-     * @param array $moduleValues Yaml entries as array
-     * @param InputInterface  $input  An InputInterface instance
-     * @param OutputInterface $output An OutputInterface instance
+     *
+     * @param array           $moduleValues Yaml entries as array
+     * @param InputInterface  $input        An InputInterface instance
+     * @param OutputInterface $output       An OutputInterface instance
+     *
      * @return array
      */
     private function installModules($moduleValues, $input, $output)
@@ -396,11 +407,11 @@ HELP;
                             $output->writeLn("<error>Unable to create folder {$fullTargetPath}!</error>");
                         }
                     }
-                    $arguments = array(
-                        'command' => 'oe:module:install-configuration',
-                        'module-source-path'    => $sourceDir,
-                        'module-target-path'    => $targetDir
-                    );
+                    $arguments = [
+                        'command'            => 'oe:module:install-configuration',
+                        'module-source-path' => $sourceDir,
+                        'module-target-path' => $targetDir
+                    ];
                     $activateInput = new ArrayInput($arguments);
                     $output->writeLn("<comment>Installing module {$sourceDir} ...</comment>");
                     $app->find('oe:module:install-configuration')->run($activateInput, $output);
@@ -413,6 +424,7 @@ HELP;
 
     /**
      * @param string $path
+     *
      * @return string
      */
     private function getAbsolutePath(string $path): string
@@ -426,6 +438,7 @@ HELP;
      * Delete module entries from oxconfig table
      *
      * @param int $shopId
+     *
      * @return void
      */
     private function clearModuleData($shopId = false)
@@ -440,8 +453,9 @@ HELP;
         ];
         $queryBuilder = $this->queryBuilderFactory->create();
         $queryBuilder
-        ->delete('oxconfig')
-        ->where("oxvarname IN('" . implode("','", array_values($aVarnames)) . "')")
-        ->execute();
+            ->delete('oxconfig')
+            ->where("oxvarname IN('" . implode("','", array_values($aVarnames)) . "')")
+            ->andWhere("oxshopid = " . $shopId)
+            ->execute();
     }
 }
