@@ -1,4 +1,6 @@
-# OXID console moduleactivator
+# OXID Console Moduleactivator
+
+Custom command for the [OXID console](https://docs.oxid-esales.com/developer/en/6.2/development/tell_me_about/console.html).
 
 ## Installation
 
