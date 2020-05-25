@@ -148,6 +148,7 @@ HELP;
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $activateShopId = $this->context->getCurrentShopId();
+        $output->writeLn("<info>START module activator shop " . $activateShopId . "</info>");
         $clearModuleData = $input->getOption('clearModuleData');
         if ($clearModuleData) {
             $output->writeLn("<info>Clearing module data in DB!</info>");
@@ -247,11 +248,12 @@ HELP;
                     }
                 }
             } else {
-                $output->writeLn("<comment>No modules to activate for subshop '$shopId'!</comment>");
+                $output->writeLn("<comment>No modules to activate for subshop " . $activateShopId . "!</comment>");
             }
         } else {
             $output->writeLn("<error>No valid YAML data found!</error>");
         }
+        $output->writeLn("<info>END module activator shop " . $activateShopId . "</info>");
     }
 
     /**
