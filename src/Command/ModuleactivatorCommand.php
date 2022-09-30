@@ -254,6 +254,8 @@ HELP;
             $output->writeLn("<error>No valid YAML data found!</error>");
         }
         $output->writeLn("<info>END module activator shop " . $activateShopId . "</info>");
+
+        return Command::SUCCESS;
     }
 
     /**
